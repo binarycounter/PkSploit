@@ -4,9 +4,9 @@
 
 **DISCLAIMER: I AM NOT RESPONSIBLE FOR ANYTHING, INCLUDING LOSS OF DATA, BROKEN GAMEBOYS, OR TEARS BECAUSE YOU ACCIDENTILLY OVERWROTE YOUR CHILDHOOD SAVE FILE WITH YOUR SICK 3 STARTER TEAM**
 
+---
 
-
-This is a suite of tools allowing you to dump rom/save data and reflash save data on any GB and GBC cartridge using nothing but a Pokemon Gen 1 cart, a link cable and an Arduino compatible microcontroller (e.g. Arduino Nano or any ATmega368p board).
+This is a suite of tools allowing you to dump rom/save data and reflash save data on any GB and GBC cartridge using nothing but a Pokemon Gen 1 cart, a link cable and an Arduino compatible microcontroller (e.g. Arduino Nano or any ATmega368p board). Exploit based on: https://github.com/vaguilar/pokemon-red-cable-club-hack
 
 In the future this might be a cheap & dirty way to test code on hardware using a bootleg cartridge as permanent flash storage.
 
