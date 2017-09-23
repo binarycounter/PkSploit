@@ -31,7 +31,7 @@ In the future this might be a cheap & dirty way to test code on hardware using a
 * RGBDS (Included)
 
 ## Build
-
+**Currently only builds on windows (well right now it builds nowhere...), but there's no reason it shouldn't work on other OS (I'm just lazy)**
 1. Install Prerequisites: `TODO`
 2. Clone: `git clone http://github.com/binarycounter/pksploit`
 3. Enter build directory: `cd PkSploit/build/`
