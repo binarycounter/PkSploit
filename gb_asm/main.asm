@@ -5,8 +5,14 @@
 Boot::
 
 .setup
+ld a, [$ffff] ;Disable those pesky serial interrupts, ugh.
+and $f7
+ld [$ffff], a
 
+;Maybe draw something to the screen here?
+;After that, disable interrupts so we have full control
 
+di
 .menu
 
 ;Basic Command interface.
@@ -26,12 +32,28 @@ cp $33
 jr z, .jump
 jr .menu
 
+;Command 33, jump to address
+;Usage: 	GB sends $10, Client responds with High byte of address,
+;		 	GB sends $20, Client responds with low byte of address.
+;			GB jumps to address, make sure to jump back .setup to return.
+.jump
+call getaddress
+jp [hl]
 
+
+;Command AA, set byte
+;Usage: 	GB sends $10, Client responds with High byte of address,
+;		 	GB sends $20, Client responds with low byte of address.
+;			GB sends $30, Client responds with byte to be written, 
+;			command writes byte and returns to menu
 .setbyte
-
-;todo
-
+call getaddress
+ld a, $30
+call serial
+ld [hl], a
 jr .menu
+
+
 
 .transfer
 
@@ -40,25 +62,24 @@ jr .menu
 jr .menu
 
 
-;Command 33, jump to address
-;Usage: 	GB sends $A0, Client responds with High byte of address,
-;		 	GB sends $B0, Client responds with low byte of address.
-;			GB jumps to address, make sure to jump back .setup to return.
-.jump
 
-ld a, $A0
+
+
+
+
+
+getaddress: ;	GB sends $10, Client responds with High byte of address,
+;		 		GB sends $20, Client responds with low byte of address. 
+;				destroys a, returns address in hl
+ld a, $10
 call serial
 ld h, a
-ld a, $B0
+ld a, $20
 call serial
 ld l, a
-jp [hl]
+ret
 
-
-
-
-
-.serial ;writes value in A to serial and puts response in A
+serial: ;writes value in A to serial and puts response in A
 
 
 ld [$ff01],a ;Serial Data Register
@@ -67,6 +88,6 @@ ld [$ff02],a ;Serial Mode
 .waitloop1
 ld a, [$ff02]
 and $80
-jr nz, .waitloop1
+jr nz, .waitloop1 ;Waits for data
 ld a, [$ff01]
 ret
