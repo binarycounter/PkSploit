@@ -1,7 +1,7 @@
 ;Author: BinaryCounter (23-09-17)
 
 
-    SECTION "Program Start",WRAMX[$D000]
+    SECTION "Program Start",HOME[$150]
 Boot::
 
 .setup
@@ -54,10 +54,36 @@ ld [hl], a
 jr .menu
 
 
+;Command 55, Block transfer
+;Usage: 	GB sends $10, Client responds with High byte of byte count,
+;		 	GB sends $20, Client responds with low byte of byte count.
+;			GB sends $10, Client responds with High byte of start address,
+;		 	GB sends $20, Client responds with low byte of start address.
+;			Command performs block transfer, returns to menu
 
 .transfer
+ld a, [$FFF1] 
+ld d, a        ; load command Settings (See set byte for options)
+call getaddress
+ld b, h
+ld c, l
+call getaddress
 
-;todo
+.loop1
+    ld a, [hl] 
+	call serial
+	bit 0, d ;Is write bit set?
+	jr z, .skipwrite
+	ld [hl], a
+.skipwrite
+	inc hl
+	;------
+	dec bc
+	ld  a, b
+	or  c
+	jr  nz, .loop1
+;loopend	
+
 
 jr .menu
 
@@ -65,8 +91,7 @@ jr .menu
 
 
 
-
-
+;General-Purpose functions
 
 getaddress: ;	GB sends $10, Client responds with High byte of address,
 ;		 		GB sends $20, Client responds with low byte of address. 
@@ -91,3 +116,16 @@ and $80
 jr nz, .waitloop1 ;Waits for data
 ld a, [$ff01]
 ret
+
+delay: ;delays by value in FFF0
+ld a, [$FFF0]
+.wastetime
+	dec a
+	nop
+	nop
+	nop
+	nop
+	nop
+jr nz, .wastetime
+ret
+;loopend	
