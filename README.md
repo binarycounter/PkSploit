@@ -5,7 +5,7 @@
 ---
 **WARNING: UNDER HEAVY DEVELOPMENT, LIKELY WONT WORK! ALSO I'M STILL SETTING THIS REPOSITORY UP!**
 
-**DISCLAIMER: I AM NOT RESPONSIBLE FOR ANYTHING, INCLUDING LOSS OF DATA, BROKEN GAMEBOYS, OR TEARS BECAUSE YOU ACCIDENTILLY OVERWROTE YOUR CHILDHOOD SAVE FILE WITH YOUR SICK 3 STARTER TEAM**
+**DISCLAIMER: I AM NOT RESPONSIBLE FOR ANYTHING, INCLUDING LOSS OF DATA, BROKEN GAMEBOYS, OR TEARS BECAUSE YOU ACCIDENTALLY OVERWRITE YOUR CHILDHOOD SAVE FILE WITH YOUR SICK 3 STARTER TEAM**
 
 ---
 
@@ -20,7 +20,7 @@ In the future this might be a cheap & dirty way to test code on hardware using a
 * (No writing to ROM obviously, but reprogramming flash based cartrigdes (e.g. bootlegs) may be possible in the future)
 
 ## Hardware Prerequisites
-* Arduino Compatible Microcontroller
+* Arduino Compatible microcontroller
 * Gameboy DMG, Color, Pocket, Light (Any gameboy up until GBA)
 
 ## Software Prerequisites
@@ -39,8 +39,6 @@ In the future this might be a cheap & dirty way to test code on hardware using a
 
 
 
-
-
 ## Planned Features
 
 * Get everything ported over from old private codebase.
@@ -50,7 +48,6 @@ In the future this might be a cheap & dirty way to test code on hardware using a
 * Find and Port Code to other Link Cable related ACE exploits
 
 
-Still setting up this repository...
 
 
-**I AM NOT AFFILIATED OR ENDORSED BY NINTENDO. THIS REPOSITORY DOES NOT CONTAIN NINTENDO OR GAMEFREAKS CODE OR DATA**
+**I AM NOT AFFILIATED OR ENDORSED BY NINTENDO. THIS REPOSITORY DOES NOT CONTAIN NINTENDO OR GAMEFREAK CODE OR DATA**
