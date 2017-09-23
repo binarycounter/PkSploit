@@ -28,7 +28,7 @@ In the future this might be a cheap & dirty way to test code on hardware using a
 * Python 2.7
 * PySerial
 * Arduino IDE
-* RGBDS
+* RGBDS (Included)
 
 ## Build
 
