@@ -22,6 +22,7 @@ In the future this might be a cheap & dirty way to test code on hardware using a
 ## Hardware Prerequisites
 * Arduino Compatible microcontroller
 * Gameboy DMG, Color, Pocket, Light (Any gameboy up until GBA)
+* Link Cable or any other way to connect the Arduino to the Gameboys Link Interface
 
 ## Software Prerequisites
 * Python 2.7
