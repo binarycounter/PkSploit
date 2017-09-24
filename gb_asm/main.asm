@@ -23,7 +23,7 @@ di
 ; $33 - Jump to Address
 
 ld a, $CD
-call serial
+call serial + $c486 
 cp $AA
 jr z, .setbyte
 cp $55 
@@ -37,7 +37,7 @@ jr .menu
 ;		 	GB sends $20, Client responds with low byte of address.
 ;			GB jumps to address, make sure to jump back .setup to return.
 .jump
-call getaddress
+call getaddress + $c486 
 jp [hl]
 
 
@@ -47,9 +47,9 @@ jp [hl]
 ;			GB sends $30, Client responds with byte to be written, 
 ;			command writes byte and returns to menu
 .setbyte
-call getaddress
+call getaddress + $c486 
 ld a, $30
-call serial
+call serial + $c486 
 ld [hl], a
 jr .menu
 
@@ -64,14 +64,14 @@ jr .menu
 .transfer
 ld a, [$FFF1] 
 ld d, a        ; load command Settings (See set byte for options)
-call getaddress
+call getaddress + $c486 
 ld b, h
 ld c, l
-call getaddress
+call getaddress + $c486 
 
 .loop1
     ld a, [hl] 
-	call serial
+	call serial + $c486 
 	bit 0, d ;Is write bit set?
 	jr z, .skipwrite
 	ld [hl], a
@@ -97,10 +97,10 @@ getaddress: ;	GB sends $10, Client responds with High byte of address,
 ;		 		GB sends $20, Client responds with low byte of address. 
 ;				destroys a, returns address in hl
 ld a, $10
-call serial
+call serial + $c486 
 ld h, a
 ld a, $20
-call serial
+call serial + $c486 
 ld l, a
 ret
 
@@ -113,6 +113,7 @@ ld [$ff02],a ;Serial Mode
 .waitloop1
 ld a, [$ff02]
 and $80
+call delay + $c486 
 jr nz, .waitloop1 ;Waits for data
 ld a, [$ff01]
 ret
