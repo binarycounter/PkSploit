@@ -16,7 +16,7 @@
 #include <avr/pgmspace.h>
 
 #include "pokemon.h"
-#include "pokemonspoof.h"
+#include "data.h"
 
 int volatile CLOCK_PIN = 2;
 int volatile SO_PIN = 6;
@@ -141,7 +141,7 @@ byte handleIncomingByte(byte in) {
     } else if(trade_centre_state == SENDING_DATA) {
       send = DATA_BLOCK[counter++];
       if(counter == 619) {
-        trade_centre_state = PKSPPLOIT_MENU;
+        trade_centre_state = PKSPLOIT_MENU;
       }
     }
      else if(trade_centre_state == PKSPLOIT_MENU) {
