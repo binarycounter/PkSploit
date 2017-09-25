@@ -1,7 +1,7 @@
 ;Author: BinaryCounter (23-09-17)
 
 
-    SECTION "Program Start",HOME[$150]
+    SECTION "Program Start",ROM0[$150]
 Boot::
 
 .setup
@@ -38,7 +38,7 @@ jr .menu
 ;			GB jumps to address, make sure to jump back .setup to return.
 .jump
 call getaddress + $c486 
-jp [hl]
+jp hl
 
 
 ;Command AA, set byte
