@@ -2,3 +2,8 @@
 build/config.txt
 build/dist/*
 build/config.ini
+.vscode/tasks.json
+*.pyc
+*.gb
+*.sav
+*.bin
