@@ -9,10 +9,19 @@ ld a, [$ffff] ;Disable those pesky serial interrupts, ugh.
 and $f7
 ld [$ffff], a
 
+;set default vars
+
+ld a, $00
+ld [$FFF0], a ;set delay
+
 ;Maybe draw something to the screen here?
 ;After that, disable interrupts so we have full control
 
 di
+
+.premenu
+
+
 .menu
 
 ;Basic Command interface.
@@ -73,9 +82,9 @@ call getaddress + $c486
     ld a, [hl] 
 	call serial + $c486 
 	bit 0, d ;Is write bit set?
-	jr z, .skipwrite
-	ld [hl], a
-.skipwrite
+; 	jr z, .skipwrite
+; 	ld [hl], a
+; .skipwrite
 	inc hl
 	;------
 	dec bc
@@ -119,7 +128,8 @@ ld a, [$ff01]
 ret
 
 delay: ;delays by value in FFF0
-ld a, [$FFF0]
+ld a, $FF
+jr z, .skipdelay
 .wastetime
 	dec a
 	nop
@@ -128,5 +138,6 @@ ld a, [$FFF0]
 	nop
 	nop
 jr nz, .wastetime
+.skipdelay
 ret
 ;loopend	
