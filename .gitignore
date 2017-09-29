@@ -7,3 +7,4 @@ build/config.ini
 *.gb
 *.sav
 *.bin
+*.bak
