@@ -3,10 +3,11 @@ import sys
 import serial
 import threading 
 import time
- 
+import Tkinter, tkFileDialog
 
-nintendologo="".join(map(chr,[0xCE,0xED,0x66,0x66,0xCC,0x0D,0x00,0x0B,0x03,0x73,0x00,0x83,0x00,0x0C,0x00,0x0D,0x00,0x08,0x11,0x1F,0x88,0x89,0x00,0x0E,0xDC,0xCC,0x6E,0xE6,0xDD,0xDD,0xD9,0x99,0xBB,0xBB,0x67,0x63,0x6E,0x0E,0xEC,0xCC,0xDD,0xDC,0x99,0x9F,0xBB,0xB9,0x33,0x3E]))
-    
+import constants
+
+  
 
 #Let's write some non flexible code first, just so that i have something to work on
 
@@ -19,11 +20,13 @@ cmdpar3=0
 cmdpar4=0
 cmddone=False
 cmdoutput=""
+root = Tkinter.Tk()
+root.withdraw()
 
 cartmbc=0
 cartbanks=0
-srambanks=0
-
+cartsrambanks=0
+cartname=""
 
 
 
@@ -109,16 +112,16 @@ def interfacef():
 
 
 def verifyheader():
-    global cmdoutput, nintendologo, cartmbc, cartbanks, srambanks
+    global cmdoutput, nintendologo, cartmbc, cartbanks, srambanks, cartname, cartsrambanks
     command("dump",0x00,0x50,0x01,0x00) #Dump $50 bytes at address $0100    
-    if cmdoutput[4:-28]!=nintendologo:
+    if cmdoutput[4:-28]!=constants.nintendologo:
         print "Nintendo logo doesn't match."
         print "Cartridge possibly drity or broken."
         return False
     else:
         print "Cart has a valid Nintendo Logo in the header"
     print "Cart name: "+cmdoutput[52:-12]
-    
+    cartname=cmdoutput[52:-12]
     if ord(cmdoutput[67:-12]) == 0x80:
         print "Cart has Gameboy Color enhancements"
     if ord(cmdoutput[67:-12]) == 0xC0:
@@ -132,10 +135,18 @@ def verifyheader():
         print "Cart is a Non-Japanese exclusive"
     print "Cart Type: "+str(ord(cmdoutput[71:-8]))
     cartmbc=ord(cmdoutput[71:-8])
-    print "ROM Size: "+str(ord(cmdoutput[72:-7]))
-    cartbanks=ord(cmdoutput[72:-7])
-    print "RAM Size: "+str(ord(cmdoutput[73:-6]))
-    srambanks=ord(cmdoutput[73:-6])
+    print "ROM Size: "+str(constants.rombanks[ord(cmdoutput[72:-7])]*16)+ "KB / " + str(constants.rombanks[ord(cmdoutput[72:-7])])+ " Banks"
+    cartbanks=constants.rombanks[ord(cmdoutput[72:-7])]
+
+    if ord(cmdoutput[73:-6]) == 0:
+        print "RAM Size: 0KB (Cart doesn't have SRAM)"
+    else: 
+        if ord(cmdoutput[73:-6]) == -1:
+            print "RAM Size: 2KB / 1 Bank (Only 1/4th of the bank is mapped)"
+        else:
+            print "RAM Size: " + str(constants.srambanks[ord(cmdoutput[73:-6])]*8) + "KB / " + str(constants.srambanks[ord(cmdoutput[73:-6])]) + " Bank(s)"
+        
+    cartsrambanks=constants.srambanks[ord(cmdoutput[73:-6])]
 
     print "Header dump ($100-$150):"
     print " ".join("{:02x}".format(ord(c)) for c in cmdoutput)
@@ -144,33 +155,86 @@ def verifyheader():
     return True
 
 def dumprom():
-    i=0
-    banks=32 #32banks for this test
-
+    global root, cartname, cartbanks
+    
+   
+    
+    
     if verifyheader()==False:
         print "Header is broken, aborted dump."
         return False
+    print "Validated header."
+    file_path = tkFileDialog.asksaveasfilename(defaultextension=".gb", initialfile=''.join(e for e in cartname if e.isalnum())+".gb")
+    if file_path == "None" or file_path == "":
+        return False
+    fo = open(file_path, "wb")
     rom=""
+    banks=cartbanks 
+    i=0
     command("dump",0x40,0x00,0x00,0x00)
     rom=cmdoutput
+    fo.write(cmdoutput)
     i+=1
     print "Dumped "+str(i) +"/"+str(banks)+ " Banks."
     while i < banks:
         command("setbyte",0x20,0x00,i,0x00)
         command("dump",0x40,0x00,0x40,0x00)
         rom+=cmdoutput
+        fo.write(cmdoutput)
+        fo.flush()
+        os.fsync(fo)
         i+=1
         print "Dumped "+str(i) +"/"+str(banks)+ " Banks."
 
     print "Rom dump complete"
-    fo = open("rom.gb", "wb")
-    fo.write(rom)
+    
+    
     fo.close()
     return rom
     
 
 def dumpsram():
-    print "stub"
+    global root, cartname, cartsrambanks
+    
+   
+    
+    
+    if verifyheader()==False:
+        print "Header is broken, aborted dump."
+        return False
+    print "Validated header."
+    
+    banks=cartsrambanks 
+    if banks == 0:
+        print "No SRAM detected. aborted dump."
+        return False
+
+    file_path = tkFileDialog.asksaveasfilename(defaultextension=".sav", initialfile=''.join(e for e in cartname if e.isalnum())+".sav")
+    if file_path == "None" or file_path == "":
+        return False
+    fo = open(file_path, "wb")
+    sram=""
+    if banks == -1:
+        print "2KB SRAM dumping not supported yet."
+    else:
+        i=0
+        while i < banks:
+            i+=1
+            command("setbyte",0x00,0x00,0x0a,0x00) #Enable SRAM
+            command("setbyte",0x40,0x00,i-1,0x00) #Switch SRAM Bank
+            command("dump",0x20,0x00,0xa0,0x00)
+            sram=cmdoutput
+            fo.write(cmdoutput)
+            fo.flush()
+            os.fsync(fo)
+            print "Dumped "+str(i) +"/"+str(banks)+ " Banks."
+
+        command("setbyte",0x00,0x00,0x00,0x00) #Disable SRAM
+    print "SRAM dump complete"
+    
+    
+    fo.close()
+    return sram
 
 def dumpcustom():
     print "stub"
@@ -247,6 +311,7 @@ def serialf():
                 cmdoutput=buf[:-11]
                 cmdstr=""
                 cmddone=True
+            
             
 
                 
