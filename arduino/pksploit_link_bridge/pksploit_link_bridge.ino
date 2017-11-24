@@ -54,9 +54,12 @@ volatile trade_centre_state_t nextstate = PKSPLOIT_MENU;
 volatile int counter = 0;
 volatile byte command = 0x00;
 volatile int counter2 = 00;
+volatile int cmddata = -1;
 volatile connection_state_t connection_state = NOT_CONNECTED;
 volatile trade_centre_state_t trade_centre_state = INIT;
-
+ char senddata[1024];
+volatile int counter3=0;
+volatile boolean fillbuffer = false;
 
 
 void setup() {
@@ -106,7 +109,9 @@ void clockInterrupt(void) {
   if(outputBuffer & 0x80 ? SO_PIN : 0!=0)
   {
   digitalHigh(SO_PIN);
-  }else{digitalLow(SO_PIN);}
+  digitalHigh(ledStatus);
+  }else{digitalLow(SO_PIN);
+       digitalLow(ledStatus);}
 
   outputBuffer = outputBuffer << 1;
   
@@ -117,10 +122,12 @@ byte handleIncomingByte(byte in) {
   
   switch(connection_state) {
   case NOT_CONNECTED:
+    Serial.write(".");
     if (in==0xCD)
     {connection_state = TRADE_CENTRE;
     trade_centre_state = PKSPLOIT_MENU;
     Serial.print("StatusMQ");}
+    
     if(in == PKMN_MASTER)
       send = PKMN_SLAVE;
     else if(in == PKMN_BLANK)
@@ -171,10 +178,10 @@ byte handleIncomingByte(byte in) {
       send = in;
     } else if(trade_centre_state == WAITING_TO_SEND_DATA && (in & 0xF0) != 0xF0) {
       counter = 0;
-      send = DATA_BLOCK[counter++];
+      send = pgm_read_byte_near(DATA_BLOCK+counter++);
       trade_centre_state = SENDING_DATA;
     } else if(trade_centre_state == SENDING_DATA) {
-      send = DATA_BLOCK[counter++];
+      send = pgm_read_byte_near(DATA_BLOCK+counter++);
       if(counter == 619) {
         trade_centre_state = PKSPLOIT_MENU;
         Serial.print("StatusMenu");
@@ -191,25 +198,41 @@ byte handleIncomingByte(byte in) {
         case 34: //Internal CMD 0x22, set nextstate to PKSPLOIT_DUMP_BLOCK
           nextstate=PKSPLOIT_DUMP_BLOCK;
           send=00;
+         
           break;
         case 68: //Internal CMD 0x44, set nextstate to PKSPLOIT_SEND_BLOCK
           nextstate=PKSPLOIT_SEND_BLOCK;
+          //Serial.print("e");
           send=00;
+          counter3=0;
+          cmddata=5;
+          break;
+        case 119:
+          //Failsafe to ensure we're still in sync, we don't want to write off by one data or garbage data to the gameboy
+          if(Serial.read()!=0xDE){Serial.print("no");return 0x00;}
+          if(Serial.read()!=0xAD){Serial.print("no");return 0x00;}
+          if(Serial.read()!=0xBE){Serial.print("no");return 0x00;}
+          if(Serial.read()!=0xEF){Serial.print("no");return 0x00;}
+          cli();
+          fillbuffer=true;
+          return 0x00;
           break;
         case 17: //Internal CMD 0x11
           counter2=Serial.read()*256+Serial.read();
           send=00;
+          
           break;
       }
       
       sending=true;}
-      
+      if(cmddata>0){cmddata--;}
+      if(cmddata==0){sending=false;}
       if(!Serial.available()){sending=false;}
       
      }
     else if(trade_centre_state == PKSPLOIT_DUMP_BLOCK) {
       Serial.write(in);
-      
+      send=Serial.read();
       if(counter2==0)
       {
         trade_centre_state = PKSPLOIT_MENU;
@@ -218,6 +241,25 @@ byte handleIncomingByte(byte in) {
       }
       counter2--;
       
+
+
+    }else if(trade_centre_state == PKSPLOIT_SEND_BLOCK) {
+      send=senddata[counter3];
+      
+      if(counter2==counter3)
+      {
+        //Serial.print(counter2);
+        //Serial.print("-");
+        //Serial.print(counter3);
+        counter2=0;
+        counter3=0;
+        trade_centre_state = PKSPLOIT_MENU;
+        nextstate = PKSPLOIT_MENU;
+        cmddata=-1;
+        Serial.print("StatusMenu");
+      }
+      counter3++;
+      return send;
 
 
     } else {
@@ -237,5 +279,24 @@ byte handleIncomingByte(byte in) {
 }
 
 void loop() { 
+if(fillbuffer==true)
+{
+  Serial.print("buffer");
+  Serial.print(counter2);
+  Serial.flush();
+  connection_state = NOT_CONNECTED;
+  
+  trade_centre_state = INIT;
 
+   //Disconnect because of possible desync. reconnect should be seemless (fingers crossed)
+  Serial.readBytes(senddata,counter2);
+
+  fillbuffer=false;
+
+  sei();
+  
+
+
+
+}
 }
